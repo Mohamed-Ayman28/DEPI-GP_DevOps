@@ -1,0 +1,31 @@
+<div class="main">
+  <section class="auth-card">
+    <header>EventPlanner</header>
+    <a class="marketplace-link" routerLink="/services">Browse event services</a>
+
+    <div class="mode-toggle">
+      <button type="button" [class.active]="!isLogin" (click)="setMode('signup')">Sign up</button>
+      <button type="button" [class.active]="isLogin" (click)="setMode('login')">Login</button>
+    </div>
+
+    <div class="panel" *ngIf="!isLogin">
+      <form (ngSubmit)="signup()" #signupForm="ngForm">
+        <label aria-hidden="true">Sign up</label>
+        <input type="text" placeholder="User name" [(ngModel)]="name" name="name" required />
+        <input type="email" placeholder="Email" [(ngModel)]="email" name="email" required />
+        <input type="tel" placeholder="Phone Number" [(ngModel)]="phone_number" name="phone_number" required />
+        <input type="password" placeholder="Password" [(ngModel)]="password" name="password" required />
+        <button type="submit">Sign up</button>
+      </form>
+    </div>
+
+    <div class="panel" *ngIf="isLogin">
+      <form (ngSubmit)="login()" #loginForm="ngForm">
+        <label aria-hidden="true">Login</label>
+        <input type="email" placeholder="Email" [(ngModel)]="loginEmail" name="emailLogin" required />
+        <input type="password" placeholder="Password" [(ngModel)]="loginPassword" name="passwordLogin" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </section>
+</div>

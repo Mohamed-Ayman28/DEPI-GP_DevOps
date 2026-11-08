@@ -1,0 +1,144 @@
+<div class="search-container">
+  <header class="search-header">
+    <h1>Search Events</h1>
+    <div class="header-actions">
+      <button class="back-btn" (click)="backToDashboard()">← Back to Dashboard</button>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="search-section">
+    <div class="search-form">
+      <h2>Advanced Search Filters</h2>
+      <p class="form-description">Search events by keywords, date, or user role</p>
+
+      <div class="form-group">
+        <label for="keyword">
+          <span class="icon">🔍</span>
+          Keyword Search
+        </label>
+        <input 
+          type="text" 
+          id="keyword" 
+          [(ngModel)]="searchKeyword" 
+          name="keyword" 
+          placeholder="Search by event title or task description"
+          (keyup.enter)="performSearch()" />
+        <small>Search in event names and descriptions</small>
+      </div>
+
+      <div class="form-group">
+        <label for="date">
+          <span class="icon">📅</span>
+          Event Date
+        </label>
+        <input 
+          type="date" 
+          id="date" 
+          [(ngModel)]="searchDate" 
+          name="date" />
+        <small>Filter by specific event date</small>
+      </div>
+
+      <div class="form-group">
+        <label for="role">
+          <span class="icon">👤</span>
+          User Role
+        </label>
+        <select 
+          id="role" 
+          [(ngModel)]="searchRole" 
+          name="role">
+          <option value="">All Roles</option>
+          <option value="organizer">Organizer</option>
+          <option value="attendee">Attendee</option>
+        </select>
+        <small>Filter by your role in events</small>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          class="btn-search" 
+          (click)="performSearch()"
+          [disabled]="isSearching">
+          <span *ngIf="!isSearching">🔍 Search Events</span>
+          <span *ngIf="isSearching">⏳ Searching...</span>
+        </button>
+        <button 
+          class="btn-clear" 
+          (click)="clearSearch()"
+          [disabled]="isSearching">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="results-section" *ngIf="hasSearched">
+      <h2>Search Results</h2>
+
+      <!-- Error Message -->
+      <div class="error-message" *ngIf="errorMessage">
+        <span class="icon">⚠️</span>
+        {{ errorMessage }}
+      </div>
+
+      <!-- No Results -->
+      <div class="empty-state" *ngIf="!errorMessage && searchResults.length === 0">
+        <span class="icon">🔍</span>
+        <p>No events found matching your search criteria.</p>
+        <p class="suggestion">Try adjusting your filters or search with different keywords.</p>
+      </div>
+
+      <!-- Results Grid -->
+      <div class="results-info" *ngIf="searchResults.length > 0">
+        <p>Found <strong>{{ searchResults.length }}</strong> event(s)</p>
+      </div>
+
+      <div class="events-grid" *ngIf="searchResults.length > 0">
+        <div class="event-card" *ngFor="let event of searchResults">
+          <div class="event-header">
+            <h3>{{ event.title }}</h3>
+            <span class="event-badge" *ngIf="event.is_organizer">Organizer</span>
+            <span class="event-badge attendee" *ngIf="!event.is_organizer">Attendee</span>
+          </div>
+
+          <p class="event-description">{{ event.description }}</p>
+
+          <div class="event-details">
+            <div class="detail-item">
+              <span class="icon">📅</span>
+              <span>{{ event.date | date:'mediumDate' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="icon">🕐</span>
+              <span>{{ event.time }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="icon">📍</span>
+              <span>{{ event.location }}</span>
+            </div>
+            <div class="detail-item" *ngIf="event.organizer_name">
+              <span class="icon">👤</span>
+              <span>Organized by {{ event.organizer_name }}</span>
+            </div>
+          </div>
+
+          <div class="event-actions">
+            <button 
+              class="btn-view" 
+              *ngIf="event.is_organizer"
+              [routerLink]="['/attendance', event.id]">
+              View Details
+            </button>
+            <button 
+              class="btn-view" 
+              *ngIf="!event.is_organizer">
+              View Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

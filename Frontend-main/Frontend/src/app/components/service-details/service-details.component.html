@@ -1,0 +1,43 @@
+<div class="details-page">
+  <header class="details-nav">
+    <a routerLink="/services" class="back-link">← Back to marketplace</a>
+    <a routerLink="/" class="brand">EventPlanner</a>
+    <a routerLink="/dashboard">My events</a>
+  </header>
+
+  <main *ngIf="service; else state">
+    <div class="hero-image"><span>{{ service.category_name || 'Event service' }}</span></div>
+    <section class="details-layout">
+      <article>
+        <p class="eyebrow">{{ service.category_name || 'EVENT SERVICE' }}</p>
+        <h1>{{ service.name }}</h1>
+        <p class="location">⌖ {{ service.location }}</p>
+        <p class="description">{{ service.description }}</p>
+        <div class="trust-row"><span>✓ Verified listing</span><span>✓ Flexible booking</span><span>✓ Secure checkout</span></div>
+      </article>
+      <aside class="booking-card">
+        <p class="eyebrow">STARTING FROM</p>
+        <strong>{{ service.base_price | currency:service.currency:'symbol':'1.0-0' }}</strong>
+        <p>Select a package to begin planning your booking.</p>
+        <button>Request booking</button>
+      </aside>
+    </section>
+
+    <section class="packages" *ngIf="service.packages?.length">
+      <p class="eyebrow">PACKAGES</p>
+      <h2>Choose what fits your celebration</h2>
+      <div class="package-grid">
+        <article class="package" *ngFor="let item of service.packages">
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.description }}</p>
+          <strong>{{ item.price | currency:item.currency:'symbol':'1.0-0' }}</strong>
+          <button>Select package</button>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <ng-template #state>
+    <div class="state"><p *ngIf="loading">Loading service...</p><p *ngIf="!loading">{{ errorMessage }}</p><a routerLink="/services">Browse services</a></div>
+  </ng-template>
+</div>

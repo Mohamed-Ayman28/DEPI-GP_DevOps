@@ -1,0 +1,12 @@
+{
+  "name": "depi-devops-gp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EventPlanner multi-service DevOps project",
+  "scripts": {
+    "postinstall": "npm install --prefix Frontend-main/Frontend",
+    "start": "npm start --prefix Frontend-main/Frontend",
+    "build": "npm run build --prefix Frontend-main/Frontend",
+    "test": "npm test --prefix Frontend-main/Frontend"
+  }
+}

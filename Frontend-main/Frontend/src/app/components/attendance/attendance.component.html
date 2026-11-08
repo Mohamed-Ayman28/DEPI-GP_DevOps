@@ -1,0 +1,30 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Attendance Details</h1>
+    <button class="logout-btn" type="button" (click)="navigateBack()">Back</button>
+  </header>
+
+  <div class="content-section">
+    <h2>Attendees (Going & Maybe)</h2>
+    <div class="events-grid" *ngIf="filteredAttendees && filteredAttendees.length > 0; else noAttendees">
+      <table class="attendees-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Responded At</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let a of filteredAttendees">
+            <td>{{ a.name || '—' }}</td>
+            <td>{{ a.email || '—' }}</td>
+            <td [ngClass]="{
+              'status-going': a.status === 'Going',
+              'status-maybe': a.status === 'Maybe',
+              'status-not': a.status === 'Not Going'
+            }">{{ a.status }}</td>
+            <td>{{ a.responded_at ? (a.responded_at | date:'short') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noAttendees>
+      <div class="empty-state"><p>No attendees going or maybe yet.</p></div>
+    </ng-template>
+  </div>
+</div>

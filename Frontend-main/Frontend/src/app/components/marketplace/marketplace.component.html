@@ -1,0 +1,87 @@
+<div class="marketplace-page">
+  <header class="marketplace-header">
+    <div>
+      <a routerLink="/" class="brand">EventPlanner</a>
+      <p class="eyebrow">EVENT SERVICES MARKETPLACE</p>
+      <h1>Plan a celebration people remember.</h1>
+      <p class="subtitle">Find trusted venues, photographers, caterers, decorators, DJs, and event planners.</p>
+    </div>
+    <nav>
+      <a routerLink="/services">Services &amp; events</a>
+      <a routerLink="/vendor/services" class="vendor-link">List a service</a>
+      <a routerLink="/" class="sign-in">Sign in</a>
+    </nav>
+  </header>
+
+  <section class="search-panel">
+    <div class="search-copy">
+      <span class="search-icon">⌕</span>
+      <input [(ngModel)]="keyword" (keyup.enter)="search()" placeholder="What service do you need?" aria-label="Search services">
+    </div>
+    <select [(ngModel)]="categoryId" aria-label="Service category">
+      <option [ngValue]="undefined">All categories</option>
+      <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
+    </select>
+    <input type="number" [(ngModel)]="minPrice" placeholder="Min price" aria-label="Minimum price">
+    <input type="number" [(ngModel)]="maxPrice" placeholder="Max price" aria-label="Maximum price">
+    <button class="primary-button" (click)="search()">Search</button>
+    <button class="clear-button" (click)="clearFilters()">Clear</button>
+  </section>
+
+  <main>
+    <section class="published-events" *ngIf="!eventsLoading && publishedEvents.length">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">UPCOMING CELEBRATIONS</p>
+          <h2>Discover published events</h2>
+        </div>
+        <span>{{ publishedEvents.length }} events</span>
+      </div>
+      <div class="event-grid">
+        <article class="event-card" *ngFor="let event of publishedEvents">
+          <img *ngIf="event.cover_image" [src]="event.cover_image" [alt]="event.title">
+          <div class="event-card-content">
+            <p class="category">{{ event.category_name || 'Event' }}</p>
+            <h3>{{ event.title }}</h3>
+            <p>{{ event.description }}</p>
+            <div class="event-meta"><span>{{ event.date }}</span><span>{{ event.location }}</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">DISCOVER</p>
+        <h2>Services for every kind of event</h2>
+      </div>
+      <span>{{ services.length }} services</span>
+    </div>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="loading" *ngIf="loading">Finding the best services...</p>
+    <div class="empty-state" *ngIf="!loading && !errorMessage && services.length === 0">
+      <h3>No services found</h3>
+      <p>Try a different category, price range, or keyword.</p>
+    </div>
+
+    <section class="service-grid" *ngIf="!loading && services.length">
+      <article class="service-card" *ngFor="let service of services">
+        <div class="service-image">
+          <span>{{ service.category_name || 'Event service' }}</span>
+          <span class="heart">♡</span>
+        </div>
+        <div class="service-content">
+          <p class="category">{{ service.category_name || 'Event service' }}</p>
+          <h3>{{ service.name }}</h3>
+          <p class="description">{{ service.description }}</p>
+          <div class="service-meta">
+            <span>⌖ {{ service.location }}</span>
+            <strong>{{ service.base_price | currency:service.currency:'symbol':'1.0-0' }}+</strong>
+          </div>
+          <a class="details-button" [routerLink]="['/services', service.id]">View service</a>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>

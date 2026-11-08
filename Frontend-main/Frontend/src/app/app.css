@@ -1,0 +1,2 @@
+:root { --auth-background-start: #253b35; --auth-background-mid: #35584c; --auth-background-end: #d8a46d; --auth-primary: #c88d55; --auth-primary-light: #f5d4a9; --auth-accent: #e8eee8; }
+body { margin: 0; min-height: 100vh; font-family: 'Jost', sans-serif; background: linear-gradient(120deg, var(--auth-background-start), var(--auth-background-mid) 58%, var(--auth-background-end)); }

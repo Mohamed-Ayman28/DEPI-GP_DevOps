@@ -1,0 +1,19 @@
+<div class="vendor-page">
+  <header><a routerLink="/services">← Marketplace</a><strong>EventPlanner</strong><a routerLink="/dashboard">My events</a></header>
+  <main>
+    <div class="intro"><p class="eyebrow">GROW YOUR BUSINESS</p><h1>Turn your craft into someone’s perfect event.</h1><p>List your service, share your expertise, and connect with customers planning their next celebration.</p></div>
+    <form (ngSubmit)="submit()" #serviceForm="ngForm">
+      <h2>Create a service listing</h2>
+      <p class="hint">Your listing will be saved as a draft and reviewed before it appears publicly.</p>
+      <div class="form-grid">
+        <label>Service name<input [(ngModel)]="service.name" name="name" placeholder="e.g. Full Wedding Photography" required></label>
+        <label>Category<select [(ngModel)]="service.category_id" name="category" required><option [ngValue]="0">Choose a category</option><option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option></select></label>
+        <label>Starting price<input type="number" [(ngModel)]="service.base_price" name="price" min="1" required></label>
+        <label>Service location<input [(ngModel)]="service.location" name="location" placeholder="City or service area" required></label>
+      </div>
+      <label>Description<textarea [(ngModel)]="service.description" name="description" rows="6" placeholder="Describe what customers receive..." required></textarea></label>
+      <p class="success" *ngIf="message">{{ message }}</p><p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <button type="submit" [disabled]="serviceForm.invalid">Submit listing for review</button>
+    </form>
+  </main>
+</div>

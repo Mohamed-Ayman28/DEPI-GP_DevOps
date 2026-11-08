@@ -1,0 +1,229 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>EventPlanner Dashboard</h1>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </header>
+
+  <nav class="dashboard-nav">
+    <button 
+      [class.active]="currentView === 'organized'" 
+      (click)="currentView = 'organized'; loadOrganizedEvents()">
+      My Organized Events
+    </button>
+    <button 
+      [class.active]="currentView === 'invited'" 
+      (click)="currentView = 'invited'; loadInvitedEvents()">
+      Invited Events
+    </button>
+    <button 
+      [class.active]="currentView === 'create'" 
+      (click)="currentView = 'create'">
+      Create New Event
+    </button>
+    <button 
+      class="search-nav-btn"
+      [routerLink]="['/search']">
+      🔍 Search Events
+    </button>
+    <button
+      class="marketplace-nav-btn"
+      [routerLink]="['/services']">
+      ✦ Find Event Services
+    </button>
+  </nav>
+
+  <!-- Create Event Form -->
+  <div class="content-section" *ngIf="currentView === 'create'">
+    <div class="form-container">
+      <h2>{{ editingEventId ? 'Edit Event' : 'Create New Event' }}</h2>
+      <form (ngSubmit)="createEvent()" #eventForm="ngForm">
+        <div class="form-group">
+          <label for="title">Event Title</label>
+          <input 
+            type="text" 
+            id="title" 
+            [(ngModel)]="newEvent.title" 
+            name="title" 
+            placeholder="Enter event title"
+            required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            [(ngModel)]="newEvent.description" 
+            name="description" 
+            placeholder="Enter event description"
+            rows="4"
+            required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Date</label>
+            <input 
+              type="date" 
+              id="date" 
+              [(ngModel)]="newEvent.date" 
+              name="date" 
+              required />
+          </div>
+
+          <div class="form-group">
+            <label for="time">Time</label>
+            <input 
+              type="time" 
+              id="time" 
+              [(ngModel)]="newEvent.time" 
+              name="time" 
+              required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input 
+            type="text" 
+            id="location" 
+            [(ngModel)]="newEvent.location" 
+            name="location" 
+            placeholder="Enter event location"
+            required />
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="!eventForm.valid">
+          {{ editingEventId ? 'Save Changes' : 'Create Event' }}
+        </button>
+        <button *ngIf="editingEventId" type="button" class="btn-cancel" (click)="resetForm()">
+          Cancel
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Organized Events -->
+  <div class="content-section" *ngIf="currentView === 'organized'">
+    <h2>My Organized Events</h2>
+    <!-- Invite panel placed inside Organized Events section -->
+    <div id="invite-panel" class="invite-panel">
+      <h3>Invite a user to an event</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="selectEvent">Select Event</label>
+          <select id="selectEvent" [(ngModel)]="inviteSelectedEventId" name="selectEvent">
+            <option [ngValue]="null">-- Select an event --</option>
+            <option *ngFor="let ev of organizedEvents" [ngValue]="ev.id">{{ ev.title }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inviteEmailInput">User Email</label>
+          <input id="inviteEmailInput" type="email" [(ngModel)]="inviteEmail" name="inviteEmailInput" placeholder="Enter user email" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-submit" (click)="sendInvitationToSelectedEvent()">Send Invite</button>
+        <button class="btn-cancel" (click)="inviteEmail=''; inviteSelectedEventId=null">Clear</button>
+      </div>
+    </div>
+    <div class="events-grid" *ngIf="organizedEvents.length > 0; else noOrganizedEvents">
+      <div class="event-card" *ngFor="let event of organizedEvents">
+        <div class="event-header">
+          <h3>{{ event.title }}</h3>
+          <span class="organizer-badge">Organizer</span>
+        </div>
+        <p class="event-description">{{ event.description }}</p>
+        <div class="event-details">
+          <div class="detail-item">
+            <span class="icon">📅</span>
+            <span>{{ event.date | date:'mediumDate' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="icon">🕐</span>
+            <span>{{ event.time }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="icon">📍</span>
+            <span>{{ event.location }}</span>
+          </div>
+        </div>
+        <div class="event-actions">
+          <button class="btn-edit" (click)="editEvent(event)">Edit</button>
+          <button class="btn-delete" (click)="deleteEvent(event.id!)">Delete</button>
+          <button class="btn-attendees" *ngIf="event.is_organizer !== false" [routerLink]="['/attendance', event.id]">View Attendance</button>
+          <button class="btn-invite" *ngIf="event.is_organizer !== false" (click)="openInvitePanelForEvent(event.id)">Invite Users</button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noOrganizedEvents>
+      <div class="empty-state">
+        <p>You haven't organized any events yet.</p>
+        <button (click)="currentView = 'create'">Create Your First Event</button>
+      </div>
+    </ng-template>
+  </div>
+  
+<!-- Invited Events -->
+<div class="content-section" *ngIf="currentView === 'invited'">
+  <h2>Events I'm Invited To</h2>
+
+  <div class="events-grid" *ngIf="invitedEvents.length > 0; else noInvitedEvents">
+
+    <div class="event-card" *ngFor="let event of invitedEvents">
+
+      <div class="event-header">
+        <h3>{{ event.title }}</h3>
+        <span class="invited-badge">Invited</span>
+      </div>
+
+      <p class="event-description">{{ event.description }}</p>
+
+      <div class="event-details">
+        <div class="detail-item">
+          <span class="icon">📅</span>
+          <span>{{ event.date | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">🕐</span>
+          <span>{{ event.time }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">📍</span>
+          <span>{{ event.location }}</span>
+        </div>
+        <div class="detail-item" *ngIf="event.organizer_name">
+          <span class="icon">👤</span>
+          <span>Organized by {{ event.organizer_name }}</span>
+        </div>
+      </div>
+
+      <div class="event-actions">
+        <!-- invited users should not see edit/delete/invite -->
+        <div class="rsvp-controls">
+          <button class="rsvp-going" (click)="rsvp(event.id, 'Going')">Going</button>
+          <button class="rsvp-maybe" (click)="rsvp(event.id, 'Maybe')">Maybe</button>
+          <button class="rsvp-not" (click)="rsvp(event.id, 'Not Going')">Not Going</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <ng-template #noInvitedEvents>
+    <div class="empty-state">
+      <p>You haven't been invited to any events yet.</p>
+    </div>
+  </ng-template>
+
+</div>
+
+<!-- invite panel now exists inside Organized Events section -->
+ 
+
+
+
+
+</div>
+
+<!-- Attendance details moved to a dedicated page (/attendance/:id) -->
