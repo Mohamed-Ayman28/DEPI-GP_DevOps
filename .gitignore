@@ -42,4 +42,5 @@ ansible/**/.vault-password-file
 docker/mysql/data/
 docker/prometheus/data/
 docker/grafana/data/
+/uploads/
 *.log
