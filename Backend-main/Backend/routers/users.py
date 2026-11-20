@@ -12,6 +12,10 @@ def signup(user: SignupModel):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     try:
+        cursor.execute('SELECT registration_enabled FROM admin_settings WHERE id=1')
+        settings = cursor.fetchone()
+        if settings and not bool(settings['registration_enabled']):
+            raise HTTPException(status_code=403, detail='Customer registration is currently disabled')
         cursor.execute("SELECT id FROM users WHERE email=%s", (user.email,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail='Email already registered')

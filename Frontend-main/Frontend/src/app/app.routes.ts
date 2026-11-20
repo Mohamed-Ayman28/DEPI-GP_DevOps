@@ -11,6 +11,11 @@ import { AdminLoginComponent } from './components/admin/admin-login.component';
 import { AdminLayoutComponent } from './components/admin/admin-layout.component';
 import { AdminDashboardComponent } from './components/admin/admin-dashboard.component';
 import { AdminPageComponent } from './components/admin/admin-page.component';
+import { CartComponent } from './components/cart/cart.component';
+import { CheckoutComponent } from './components/checkout/checkout.component';
+import { OrdersComponent } from './components/orders/orders.component';
+import { OrderDetailComponent } from './components/order-detail/order-detail.component';
+import { ProviderBookingsComponent } from './components/provider-bookings/provider-bookings.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -25,6 +30,11 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['vendor', 'admin'] }
   },
+  { path: 'vendor/bookings', component: ProviderBookingsComponent, canActivate: [authGuard, roleGuard], data: { roles: ['vendor'] } },
+  { path: 'cart', component: CartComponent, canActivate: [authGuard, roleGuard], data: { roles: ['customer'] } },
+  { path: 'checkout', component: CheckoutComponent, canActivate: [authGuard, roleGuard], data: { roles: ['customer'] } },
+  { path: 'orders', component: OrdersComponent, canActivate: [authGuard, roleGuard], data: { roles: ['customer'] } },
+  { path: 'orders/:id', component: OrderDetailComponent, canActivate: [authGuard, roleGuard], data: { roles: ['customer'] } },
   { path: 'admin', component: AdminLoginComponent, pathMatch: 'full' },
   { path: 'admin/login', component: AdminLoginComponent, pathMatch: 'full' },
   {

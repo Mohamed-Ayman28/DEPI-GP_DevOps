@@ -33,6 +33,12 @@ services:
       APP_PORT: 8000
       DEBUG: ${DEBUG:-false}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
     volumes:
       - ./uploads:/app/uploads
     ports:
@@ -41,7 +47,7 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -74,6 +80,10 @@ services:
       DB_USER: ${DB_USER:-event_user}
       DB_PASSWORD: ${DB_PASSWORD:-change-me-locally}
       SECRET_KEY: ${SECRET_KEY:-replace-with-a-long-random-development-secret}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://localhost:8080}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - ./uploads:/app/uploads
     ports:
       - "${CATALOG_PORT:-8010}:8010"
     depends_on:

@@ -22,4 +22,12 @@ class ServiceCreate(BaseModel):
     base_price: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
     currency: str = Field(default='USD', min_length=3, max_length=3)
     location: str = Field(min_length=2, max_length=255)
+    event_date: str | None = None
+    event_time: str | None = None
+    guest_count: int | None = Field(default=None, ge=1)
+    included_services: str = ''
+    decorations: str = ''
+    additional_facilities: str = ''
+    event_theme: str = ''
+    special_instructions: str = ''
 

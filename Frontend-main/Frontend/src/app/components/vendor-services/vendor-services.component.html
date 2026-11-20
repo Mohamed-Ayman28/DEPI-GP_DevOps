@@ -1,5 +1,5 @@
 <div class="vendor-page">
-  <header><a routerLink="/services">← Marketplace</a><strong>EventPlanner</strong><a routerLink="/dashboard">My events</a></header>
+  <header><a routerLink="/services">← Marketplace</a><strong>EventPlanner</strong><span><a routerLink="/vendor/bookings">Service bookings</a> <a routerLink="/dashboard">My events</a></span></header>
   <main>
     <div class="intro"><p class="eyebrow">GROW YOUR BUSINESS</p><h1>Turn your craft into someone’s perfect event.</h1><p>List your service, share your expertise, and connect with customers planning their next celebration.</p></div>
     <form (ngSubmit)="submit()" #serviceForm="ngForm">
@@ -12,6 +12,32 @@
         <label>Service location<input [(ngModel)]="service.location" name="location" placeholder="City or service area" required></label>
       </div>
       <label>Description<textarea [(ngModel)]="service.description" name="description" rows="6" placeholder="Describe what customers receive..." required></textarea></label>
+      <div class="image-upload">
+        <div class="image-upload-heading">
+          <div><span class="field-title">Service images</span><small>Add up to 10 JPG, PNG, WEBP, or GIF images.</small></div>
+        </div>
+        <label class="file-picker">
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple (change)="onImagesSelected($event)">
+          <span>Choose images</span>
+        </label>
+        <div class="image-preview-strip" *ngIf="imagePreviews.length">
+          <article class="image-preview" *ngFor="let preview of imagePreviews; let i = index">
+            <img [src]="preview" alt="Service image preview">
+            <button type="button" (click)="removeImage(i)" aria-label="Remove image">×</button>
+            <small *ngIf="i === 0">Cover image</small>
+          </article>
+        </div>
+      </div>
+      <div class="form-grid booking-fields">
+        <label>Event date<input type="date" [(ngModel)]="service.event_date" name="event_date"></label>
+        <label>Event time<input type="time" [(ngModel)]="service.event_time" name="event_time"></label>
+        <label>Guest count<input type="number" min="1" [(ngModel)]="service.guest_count" name="guest_count"></label>
+        <label>Theme<input [(ngModel)]="service.event_theme" name="event_theme"></label>
+        <label>Included services<input [(ngModel)]="service.included_services" name="included_services"></label>
+        <label>Decorations<input [(ngModel)]="service.decorations" name="decorations"></label>
+        <label>Additional facilities<input [(ngModel)]="service.additional_facilities" name="additional_facilities"></label>
+        <label>Special instructions<input [(ngModel)]="service.special_instructions" name="special_instructions"></label>
+      </div>
       <p class="success" *ngIf="message">{{ message }}</p><p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
       <button type="submit" [disabled]="serviceForm.invalid">Submit listing for review</button>
     </form>

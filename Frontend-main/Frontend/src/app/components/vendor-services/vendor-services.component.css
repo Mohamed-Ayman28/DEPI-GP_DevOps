@@ -12,6 +12,11 @@ h1 { font-size:clamp(2.5rem,5vw,4.5rem); line-height:1.05; margin:15px 0; }
 form { background:#fff; padding:34px; border-radius:15px; box-shadow:0 13px 36px #4f453b12; }
 h2 { margin:0 0 8px; font-size:2rem; }
 .hint { color:#81786e; line-height:1.5; margin-top:0; }
+.image-upload { margin-top:18px; padding:16px; border:1px solid #e2d9cf; border-radius:10px; background:#fcfbf9; }
+.image-upload-heading { display:flex; justify-content:space-between; }.image-upload-heading div { display:grid; gap:4px; }.field-title { color:#50483f; font-weight:800; }.image-upload-heading small { color:#81786e; }
+.file-picker { margin-top:12px; display:block; }.file-picker input { display:block; width:100%; padding:10px; background:#fff; }.file-picker span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.image-preview-strip { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(150px, 32%); gap:12px; overflow-x:auto; overflow-y:hidden; padding:14px 2px 8px; scroll-snap-type:x mandatory; }
+.image-preview { position:relative; height:150px; border-radius:10px; overflow:hidden; background:#eee; scroll-snap-align:start; }.image-preview img { width:100%; height:100%; object-fit:cover; }.image-preview button { position:absolute; right:8px; top:8px; width:30px; height:30px; margin:0; border-radius:50%; padding:0; background:#fff; color:#9b4339; box-shadow:0 3px 12px #0003; }.image-preview small { position:absolute; left:8px; bottom:8px; padding:5px 8px; border-radius:999px; background:#fff; color:#35584c; font-weight:800; }
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 label { display:flex; flex-direction:column; gap:7px; color:#50483f; font-weight:700; font-size:.9rem; margin-top:18px; }
 input,select,textarea { box-sizing:border-box; width:100%; border:1px solid #e2d9cf; border-radius:8px; padding:13px; font:inherit; font-weight:400; color:#342f2a; background:#fff; }

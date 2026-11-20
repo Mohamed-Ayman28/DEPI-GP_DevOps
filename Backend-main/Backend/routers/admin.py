@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Dict
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -48,7 +49,22 @@ def admin_login(data: AdminLoginModel):
 
 @router.get('/me')
 def get_admin_profile(current_user: dict = Depends(require_role('admin'))):
-    return current_user
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            'SELECT id, name, email, phone_number, role, created_at '
+            'FROM users WHERE id=%s AND role=%s',
+            (current_user['id'], 'admin'),
+        )
+        profile = cursor.fetchone()
+        if not profile:
+            raise HTTPException(status_code=404, detail='Administrator profile not found')
+        profile['created_at'] = str(profile['created_at']) if profile.get('created_at') else None
+        return profile
+    finally:
+        cursor.close()
+        db.close()
 
 
 @router.get('/stats')
@@ -93,17 +109,123 @@ def list_users(current_user: dict = Depends(require_role('admin'))):
 
 @router.get('/settings')
 def get_admin_settings(current_user: dict = Depends(require_role('admin'))):
-    return {'registration_enabled': True, 'maintenance_mode': False}
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            'SELECT registration_enabled, maintenance_mode, updated_at '
+            'FROM admin_settings WHERE id=1'
+        )
+        settings = cursor.fetchone()
+        if not settings:
+            raise HTTPException(status_code=500, detail='Admin settings are not initialized')
+        settings['registration_enabled'] = bool(settings['registration_enabled'])
+        settings['maintenance_mode'] = bool(settings['maintenance_mode'])
+        settings['updated_at'] = str(settings['updated_at']) if settings.get('updated_at') else None
+        return settings
+    finally:
+        cursor.close()
+        db.close()
+
+
+@router.put('/settings')
+def update_admin_settings(
+    payload: Dict[str, bool],
+    current_user: dict = Depends(require_role('admin')),
+):
+    if not {'registration_enabled', 'maintenance_mode'} <= payload.keys():
+        raise HTTPException(status_code=422, detail='Both admin settings are required')
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            '''UPDATE admin_settings
+               SET registration_enabled=%s, maintenance_mode=%s
+               WHERE id=1''',
+            (bool(payload['registration_enabled']), bool(payload['maintenance_mode'])),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=500, detail='Admin settings are not initialized')
+        db.commit()
+        cursor.execute(
+            'SELECT registration_enabled, maintenance_mode, updated_at '
+            'FROM admin_settings WHERE id=1'
+        )
+        settings = cursor.fetchone()
+        settings['registration_enabled'] = bool(settings['registration_enabled'])
+        settings['maintenance_mode'] = bool(settings['maintenance_mode'])
+        settings['updated_at'] = str(settings['updated_at']) if settings.get('updated_at') else None
+        return settings
+    finally:
+        cursor.close()
+        db.close()
 
 
 @router.get('/notifications')
 def get_admin_notifications(current_user: dict = Depends(require_role('admin'))):
-    return []
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            '''SELECT id, title, message, severity, is_read, created_at
+               FROM admin_notifications ORDER BY created_at DESC, id DESC LIMIT 100'''
+        )
+        notifications = cursor.fetchall()
+        for notification in notifications:
+            notification['is_read'] = bool(notification['is_read'])
+            notification['created_at'] = str(notification['created_at'])
+        return notifications
+    finally:
+        cursor.close()
+        db.close()
+
+
+@router.patch('/notifications/{notification_id}/read')
+def mark_notification_read(
+    notification_id: int,
+    current_user: dict = Depends(require_role('admin')),
+):
+    db = get_db()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            'UPDATE admin_notifications SET is_read=1 WHERE id=%s',
+            (notification_id,),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail='Notification not found')
+        db.commit()
+        return {'id': notification_id, 'is_read': True}
+    finally:
+        cursor.close()
+        db.close()
 
 
 @router.get('/reports')
 def get_admin_reports(current_user: dict = Depends(require_role('admin'))):
-    return {'message': 'Reports are available for the selected period', 'items': []}
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            '''SELECT
+                 (SELECT COUNT(*) FROM users) AS total_users,
+                 (SELECT COUNT(*) FROM users WHERE role='vendor') AS total_vendors,
+                 (SELECT COUNT(*) FROM events) AS total_events,
+                 (SELECT COUNT(*) FROM events WHERE status='Published') AS published_events,
+                 (SELECT COUNT(*) FROM orders) AS total_bookings,
+                 (SELECT COUNT(*) FROM orders WHERE payment_status='paid') AS paid_bookings,
+                 (SELECT COUNT(*) FROM orders WHERE payment_status IN ('pending', 'pending_verification')) AS pending_bookings,
+                 (SELECT COALESCE(SUM(total), 0) FROM orders WHERE payment_status='paid') AS paid_revenue'''
+        )
+        report = cursor.fetchone()
+        report['paid_revenue'] = float(report['paid_revenue'] or 0)
+        return {
+            'message': 'Platform totals from the current database',
+            'generated_at': datetime.utcnow().isoformat(),
+            'items': [report],
+        }
+    finally:
+        cursor.close()
 
 
 @router.get('/events')
@@ -118,7 +240,15 @@ def list_events(current_user: dict = Depends(require_role('admin'))):
                     LEFT JOIN event_categories c ON c.id=e.category_id
                ORDER BY e.date ASC, e.time ASC"""
         )
-        return [serialize_admin_event(event) for event in cursor.fetchall()]
+        events = cursor.fetchall()
+        for event in events:
+            cursor.execute(
+                'SELECT image_url FROM event_images '
+                'WHERE event_id=%s ORDER BY sort_order, id',
+                (event['id'],),
+            )
+            event['image_urls'] = [row['image_url'] for row in cursor.fetchall()]
+        return [serialize_admin_event(event) for event in events]
     except Exception as exc:
         raise HTTPException(status_code=500, detail='Unable to load events') from exc
     finally:
@@ -223,7 +353,7 @@ def upload_event_image(event_id: int, image: UploadFile = File(...), current_use
         output.write(image.file.read())
     db = get_db(); cursor = db.cursor(dictionary=True)
     try:
-        image_url = f'/api/uploads/{filename}'
+        image_url = f'/uploads/{filename}'
         cursor.execute('UPDATE events SET cover_image=%s WHERE id=%s', (image_url, event_id))
         if not cursor.rowcount: raise HTTPException(status_code=404, detail='Event not found')
         db.commit(); return {'cover_image': image_url}
@@ -287,6 +417,60 @@ def list_bookings(current_user: dict = Depends(require_role('admin'))):
         return [serialize_admin_event(row) for row in cursor.fetchall()]
     except Exception as exc:
         raise HTTPException(status_code=500, detail='Unable to load bookings') from exc
+    finally:
+        cursor.close()
+        db.close()
+
+
+@router.post('/events/{event_id}/images')
+def upload_event_images(
+    event_id: int,
+    images: list[UploadFile] = File(...),
+    current_user: dict = Depends(require_role('admin')),
+):
+    allowed = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+    upload_dir = Path(os.getenv('UPLOAD_DIR', '/app/uploads'))
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute('SELECT id, cover_image FROM events WHERE id=%s', (event_id,))
+        event = cursor.fetchone()
+        if not event:
+            raise HTTPException(status_code=404, detail='Event not found')
+        cursor.execute(
+            'SELECT COALESCE(MAX(sort_order), -1) AS max_order '
+            'FROM event_images WHERE event_id=%s',
+            (event_id,),
+        )
+        next_order = int(cursor.fetchone()['max_order']) + 1
+        uploaded = []
+        for image in images[:10]:
+            if image.content_type not in allowed:
+                raise HTTPException(status_code=400, detail='Only JPG, PNG, WEBP, and GIF images are allowed')
+            extension = Path(image.filename or '').suffix.lower() or '.jpg'
+            if extension not in {'.jpg', '.jpeg', '.png', '.webp', '.gif'}:
+                extension = '.jpg'
+            filename = f'{uuid.uuid4().hex}{extension}'
+            target = upload_dir / filename
+            with target.open('wb') as output:
+                output.write(image.file.read())
+            image_url = f'/uploads/{filename}'
+            cursor.execute(
+                'INSERT INTO event_images (event_id, image_url, sort_order) '
+                'VALUES (%s, %s, %s)',
+                (event_id, image_url, next_order),
+            )
+            next_order += 1
+            uploaded.append(image_url)
+            if not event.get('cover_image'):
+                cursor.execute('UPDATE events SET cover_image=%s WHERE id=%s', (image_url, event_id))
+                event['cover_image'] = image_url
+        db.commit()
+        return {'event_id': event_id, 'image_urls': uploaded}
+    except HTTPException:
+        db.rollback()
+        raise
     finally:
         cursor.close()
         db.close()

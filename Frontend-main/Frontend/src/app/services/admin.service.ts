@@ -29,6 +29,7 @@ export interface AdminEvent {
   category_id?: number;
   category_name?: string;
   cover_image?: string;
+  image_urls?: string[];
   event_type: 'Public' | 'Private';
   ticket_price: number;
   max_attendees?: number;
@@ -42,6 +43,9 @@ export interface AdminEvent {
 
 export interface AdminCategory { id: number; name: string; is_active: boolean; created_at?: string; }
 export interface EventStats { total_events: number; published_events: number; draft_events: number; upcoming_events: number; }
+export interface AdminSettings { registration_enabled: boolean; maintenance_mode: boolean; updated_at?: string; }
+export interface AdminNotification { id: number; title: string; message: string; severity: string; is_read: boolean; created_at: string; }
+export interface AdminReports { message: string; items: Array<Record<string, unknown>>; }
 
 export interface AdminBooking {
   id: number;
@@ -78,6 +82,11 @@ export class AdminService {
   uploadEventImage(id: number, file: File): Observable<{ cover_image: string }> {
     const form = new FormData(); form.append('image', file); return this.http.post<{ cover_image: string }>(`${API_URL}/admin/events/${id}/image`, form);
   }
+  uploadEventImages(id: number, files: File[]): Observable<{ image_urls: string[] }> {
+    const form = new FormData();
+    files.forEach(file => form.append('images', file));
+    return this.http.post<{ image_urls: string[] }>(`${API_URL}/admin/events/${id}/images`, form);
+  }
   getEventCategories(): Observable<AdminCategory[]> { return this.http.get<AdminCategory[]>(`${API_URL}/admin/event-categories`); }
   createEventCategory(category: Partial<AdminCategory>): Observable<AdminCategory> { return this.http.post<AdminCategory>(`${API_URL}/admin/event-categories`, category); }
   updateEventCategory(id: number, category: Partial<AdminCategory>): Observable<AdminCategory> { return this.http.put<AdminCategory>(`${API_URL}/admin/event-categories/${id}`, category); }
@@ -94,6 +103,13 @@ export class AdminService {
   getBookings(): Observable<AdminBooking[]> {
     return this.http.get<AdminBooking[]>(`${API_URL}/admin/bookings`);
   }
+
+  getProfile(): Observable<AdminUser> { return this.http.get<AdminUser>(`${API_URL}/admin/me`); }
+  getSettings(): Observable<AdminSettings> { return this.http.get<AdminSettings>(`${API_URL}/admin/settings`); }
+  updateSettings(settings: AdminSettings): Observable<AdminSettings> { return this.http.put<AdminSettings>(`${API_URL}/admin/settings`, settings); }
+  getNotifications(): Observable<AdminNotification[]> { return this.http.get<AdminNotification[]>(`${API_URL}/admin/notifications`); }
+  markNotificationRead(id: number): Observable<{ id: number; is_read: boolean }> { return this.http.patch<{ id: number; is_read: boolean }>(`${API_URL}/admin/notifications/${id}/read`, {}); }
+  getReports(): Observable<AdminReports> { return this.http.get<AdminReports>(`${API_URL}/admin/reports`); }
 
   updateBooking(id: number, status: string): Observable<AdminBooking> {
     return this.http.put<AdminBooking>(`${API_URL}/admin/bookings/${id}`, { status });

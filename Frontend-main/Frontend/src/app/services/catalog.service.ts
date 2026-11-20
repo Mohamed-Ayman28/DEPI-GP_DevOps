@@ -59,6 +59,19 @@ export class CatalogService {
     });
   }
 
+  uploadServiceImages(serviceId: number, files: File[]): Observable<{ image_urls: string[] }> {
+    const formData = new FormData();
+    files.forEach(file => formData.append('images', file));
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+    let headers = new HttpHeaders();
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    return this.http.post<{ image_urls: string[] }>(
+      `${this.apiUrl}/services/${serviceId}/images`,
+      formData,
+      { headers }
+    );
+  }
+
   addPackage(serviceId: number, servicePackage: ServicePackage): Observable<ServicePackage> {
     return this.http.post<ServicePackage>(
       `${this.apiUrl}/services/${serviceId}/packages`,

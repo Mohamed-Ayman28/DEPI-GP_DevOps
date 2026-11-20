@@ -38,7 +38,18 @@ def get_published_events(current_user: Optional[Dict] = Depends(get_optional_cur
                WHERE e.status = 'Published'
                ORDER BY e.date ASC, e.time ASC"""
         )
-        return [serialize_search_event(event) for event in cursor.fetchall()]
+        events = cursor.fetchall()
+        for event in events:
+            cursor.execute(
+                'SELECT image_url FROM event_images '
+                'WHERE event_id=%s ORDER BY sort_order, id',
+                (event['id'],),
+            )
+            image_urls = [row['image_url'] for row in cursor.fetchall()]
+            if not image_urls and event.get('cover_image'):
+                image_urls = [event['cover_image']]
+            event['image_urls'] = image_urls
+        return [serialize_search_event(event) for event in events]
     except Exception as exc:
         raise HTTPException(status_code=500, detail='Unable to load published events') from exc
     finally:

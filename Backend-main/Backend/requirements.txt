@@ -11,3 +11,4 @@ SQLAlchemy
 alembic
 pytest
 httpx
+reportlab

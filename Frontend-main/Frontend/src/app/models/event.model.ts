@@ -10,11 +10,18 @@ export interface Event {
   created_at?: string;
   is_organizer?: boolean;
   attendees?: Attendee[];
+  category_id?: number;
   category_name?: string;
   cover_image?: string;
+  image_urls?: string[];
   status?: string;
   max_attendees?: number;
   event_type?: 'Public' | 'Private';
+  ticket_price?: number;
+  featured?: boolean | number;
+  duration?: string;
+  tags?: string;
+  registration_deadline?: string;
 }
 
 export interface CreateEventDto {
